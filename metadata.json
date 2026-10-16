@@ -1,0 +1,8 @@
+{
+  "name": "QR Studio",
+  "description": "Professional, free online QR Code Generator. Create, customize, and download high-resolution QR codes in PNG, SVG, and PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
