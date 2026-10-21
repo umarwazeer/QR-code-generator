@@ -15,6 +15,7 @@ import { buildQrCodeOptions, downloadPng, downloadSvg, downloadPdf, sanitizeFile
 import { analyzeQrContrast } from '../../lib/qr/contrastCheck';
 import { useToast } from '../ui/Toast';
 import { saveHistoryEntry, isHistoryEnabled } from '../../lib/history/historyStorage';
+import { ScanVerificationGuide } from '../ui/ScanVerificationGuide';
 
 interface QrPreviewProps {
   payload: string;
@@ -328,6 +329,11 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
             <span>Print PDF</span>
           </button>
         </div>
+      </div>
+
+      {/* Practical Scan-Testing Instructions Guide */}
+      <div className="pt-1">
+        <ScanVerificationGuide />
       </div>
 
       {/* Payload preview snippet */}

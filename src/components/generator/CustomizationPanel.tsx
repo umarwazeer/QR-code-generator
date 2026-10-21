@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Palette,
   Shapes,
@@ -49,12 +49,23 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
     });
   };
 
+  const [logoError, setLogoError] = useState<string | null>(null);
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate MIME type
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      setLogoError('Please upload a valid image file (PNG, JPG, WebP, or SVG).');
+      return;
+    }
+
+    // Validate size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('Logo file size must be under 2MB.');
+      setLogoError('Logo file size must be under 2MB.');
       return;
     }
 
@@ -70,6 +81,9 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
             ? 'Q'
             : customization.errorCorrectionLevel,
       });
+    };
+    reader.onerror = () => {
+      setLogoError('Failed to read image file. Please try another image.');
     };
     reader.readAsDataURL(file);
   };
@@ -534,6 +548,12 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                 <span className="text-[11px] text-slate-500 block mt-0.5">
                   PNG, JPG, or WebP up to 2MB (Square works best)
                 </span>
+              </div>
+            )}
+
+            {logoError && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300">
+                {logoError}
               </div>
             )}
           </div>

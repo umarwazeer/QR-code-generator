@@ -75,39 +75,39 @@ export const ContactSection: React.FC = () => {
     try {
       const endpoint = import.meta.env.VITE_FORMSPREE_ENDPOINT;
 
-      if (endpoint && endpoint.trim().startsWith('http')) {
-        // Send directly to configured Formspree endpoint
-        const response = await fetch(endpoint.trim(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            email: formData.email.trim(),
-            inquiryType: formData.inquiryType,
-            message: formData.message.trim(),
-            _subject: `QR Studio [${formData.inquiryType}]: message from ${formData.name.trim()}`,
-          }),
-        });
+      if (!endpoint || !endpoint.trim().startsWith('http')) {
+        throw new Error(
+          'Contact service is not configured. Please reach out directly on LinkedIn.'
+        );
+      }
 
-        if (response.ok) {
-          setSubmitSuccess(true);
-          setFormData(INITIAL_FORM_DATA);
-        } else {
-          const result = await response.json().catch(() => ({}));
-          throw new Error(
-            result.error ||
-              'Unable to send message at this moment. Please check your network or try again shortly.'
-          );
-        }
-      } else {
-        // Fallback for development / unconfigured endpoint:
-        // Simulate real network request and confirm functionality
-        await new Promise((res) => setTimeout(res, 800));
+      // Send directly to configured Formspree endpoint via HTTPS POST
+      const response = await fetch(endpoint.trim(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          inquiryType: formData.inquiryType,
+          message: formData.message.trim(),
+          _subject: `QR Studio [${formData.inquiryType}]: message from ${formData.name.trim()}`,
+        }),
+      });
+
+      if (response.ok) {
         setSubmitSuccess(true);
         setFormData(INITIAL_FORM_DATA);
+      } else {
+        const result = await response.json().catch(() => ({}));
+        const errMsg =
+          (Array.isArray(result.errors) && result.errors.length > 0
+            ? result.errors.map((e: any) => e.message).join(', ')
+            : result.error) ||
+          'Unable to deliver message at this time. Please check your connection or reach out on LinkedIn.';
+        throw new Error(errMsg);
       }
     } catch (err: any) {
       console.error('Contact form submission error:', err);

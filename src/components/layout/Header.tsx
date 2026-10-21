@@ -10,14 +10,21 @@ export const Header: React.FC = () => {
 
   const navItems = [
     { label: 'Home', path: '/' },
-    { label: 'Generator', path: '/generator' },
+    { label: 'QR Generator', path: '/generator' },
+    { label: 'Tabletop Cards', path: '/generator?mode=promo-card' },
+    { label: 'Design Services', path: '/#services' },
     { label: 'About', path: '/about' },
-    { label: 'Privacy', path: '/privacy' },
-    { label: 'Terms', path: '/terms' },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
+    if (path.includes('?mode=promo-card')) {
+      return location.pathname === '/generator' && location.search.includes('mode=promo-card');
+    }
+    if (path === '/generator') {
+      return location.pathname === '/generator' && !location.search.includes('mode=promo-card');
+    }
+    if (path === '/') return location.pathname === '/' && !location.hash;
+    if (path.startsWith('/#')) return false;
     return location.pathname.startsWith(path);
   };
 

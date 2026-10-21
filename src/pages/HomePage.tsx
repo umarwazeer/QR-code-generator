@@ -21,9 +21,11 @@ import {
   Share2,
   Building2,
   Info,
+  Layout,
 } from 'lucide-react';
 import { QR_TYPE_CONFIG } from '../components/generator/TypeSelector';
 import { ContactSection } from '../components/contact/ContactSection';
+import { PremiumServicesSection } from '../components/branding/PremiumServicesSection';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -272,6 +274,112 @@ export const HomePage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* DEDICATED TABLETOP PROMOTIONAL CARD GENERATOR SHOWCASE */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white p-8 sm:p-12 border border-indigo-900/60 shadow-xl relative overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">
+                <Layout className="w-3.5 h-3.5" />
+                <span>New Feature · 100% Free Business Tool</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                Tabletop Stand & Promotional Card Generator
+              </h2>
+
+              <p className="text-slate-300 text-sm leading-relaxed max-w-xl">
+                Don't just print an ordinary, naked QR code on plain paper. Generate a complete, branded acrylic stand card with your business name, marketing headline, category badge, brand colors, and company logo in under 60 seconds.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>6 Industry Templates (Restaurant, Salon, Retail...)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Custom Hex Colors & Logo Upload</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>High-Res 1200×1600px PNG Export</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Print-Ready A4 PDF with Corner Crop Guides</span>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/generator?mode=promo-card"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  <Layout className="w-4 h-4" />
+                  <span>Design My Tabletop Card — Free</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/generator"
+                  className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs border border-white/10 transition-colors"
+                >
+                  <span>Standard QR Mode</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Visual Card Mockup */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-full max-w-[280px] rounded-2xl bg-white text-slate-900 p-5 shadow-2xl border border-slate-200 text-center space-y-2.5 relative transform -rotate-1 hover:rotate-0 transition-transform duration-300 border-t-6 border-indigo-600">
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 inline-block">
+                  Contactless Dining
+                </span>
+                <h4 className="font-extrabold text-slate-900 text-sm">
+                  Copper Kettle Cafe
+                </h4>
+                <p className="font-bold text-xs text-indigo-600">
+                  Scan to View Our Menu
+                </p>
+                <p className="text-[10px] text-slate-500 leading-tight">
+                  Browse daily specials & beverage pairings
+                </p>
+
+                {/* Simulated QR Box */}
+                <div className="w-32 h-32 mx-auto bg-slate-50 border border-slate-200 rounded-xl p-2 shadow-xs flex items-center justify-center">
+                  <svg viewBox="0 0 100 100" className="w-full h-full text-indigo-950" fill="currentColor">
+                    <rect x="5" y="5" width="28" height="28" rx="4" />
+                    <rect x="10" y="10" width="18" height="18" rx="2" fill="white" />
+                    <rect x="14" y="14" width="10" height="10" rx="1" />
+
+                    <rect x="67" y="5" width="28" height="28" rx="4" />
+                    <rect x="72" y="10" width="18" height="18" rx="2" fill="white" />
+                    <rect x="76" y="14" width="10" height="10" rx="1" />
+
+                    <rect x="5" y="67" width="28" height="28" rx="4" />
+                    <rect x="10" y="72" width="18" height="18" rx="2" fill="white" />
+                    <rect x="14" y="76" width="10" height="10" rx="1" />
+
+                    <circle cx="50" cy="50" r="8" fill="#4f46e5" />
+                    <rect x="44" y="20" width="12" height="12" rx="2" />
+                    <rect x="20" y="44" width="12" height="12" rx="2" />
+                    <rect x="68" y="44" width="12" height="12" rx="2" />
+                    <rect x="44" y="68" width="12" height="12" rx="2" />
+                  </svg>
+                </div>
+
+                <span className="text-[9px] font-semibold text-slate-700 block">
+                  Point camera to scan · No app required
+                </span>
+                <span className="text-[8px] text-slate-400 block pt-1 border-t border-slate-100">
+                  Free Static QR Code • Created with QR Studio
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -547,6 +655,9 @@ export const HomePage: React.FC = () => {
           </Link>
         </div>
       </section>
+
+      {/* OPTIONAL PREMIUM CUSTOM DESIGN SERVICES */}
+      <PremiumServicesSection />
 
       {/* PRIVATE CONTACT FORM (Immediately above the footer) */}
       <ContactSection />

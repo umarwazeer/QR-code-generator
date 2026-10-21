@@ -45,7 +45,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+      console.warn('Geolocation is not supported by your browser.');
       return;
     }
     setGeoLocating(true);

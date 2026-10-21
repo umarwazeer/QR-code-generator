@@ -131,23 +131,28 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/generator?mode=promo-card" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  Tabletop Promo Cards
+                </Link>
+              </li>
+              <li>
+                <a href="/#services" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  Design Packages (From Rs. 800)
+                </a>
+              </li>
+              <li>
                 <Link to="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  About the Project
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  Supported Types
-                </Link>
-              </li>
-              <li>
-                <Link to="/generator?type=wifi" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  Wi-Fi QR Code
+                  About QR Studio
                 </Link>
               </li>
               <li>
                 <Link to="/generator?type=vcard" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  Digital Business Card
+                  Digital Business Card (vCard)
+                </Link>
+              </li>
+              <li>
+                <Link to="/generator?type=wifi" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  Guest Wi-Fi QR Code
                 </Link>
               </li>
             </ul>
