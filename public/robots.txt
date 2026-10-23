@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://qrstudio.app/sitemap.xml
+Sitemap: https://qr-studio-umar.vercel.app/sitemap.xml
