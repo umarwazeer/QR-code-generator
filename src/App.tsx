@@ -6,6 +6,8 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/HomePage';
 import { GeneratorPage } from './pages/GeneratorPage';
+import { TemplatesPage } from './pages/TemplatesPage';
+import { HistoryPage } from './pages/HistoryPage';
 import { AboutPage } from './pages/AboutPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
@@ -22,6 +24,8 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/generator" element={<GeneratorPage />} />
+                <Route path="/templates" element={<TemplatesPage />} />
+                <Route path="/history" element={<HistoryPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />

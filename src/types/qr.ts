@@ -34,6 +34,8 @@ export interface GradientOptions {
   rotation: number; // in degrees
 }
 
+export type FrameStyle = 'none' | 'scan-me' | 'bottom-bar' | 'top-badge' | 'card-border';
+
 export interface QrCustomization {
   foregroundColor: string;
   backgroundColor: string;
@@ -49,6 +51,11 @@ export interface QrCustomization {
   logoUrl?: string;
   logoSize: number; // 0.1 to 0.4
   logoMargin: number;
+  // Optional frame and call-to-action banner
+  frameStyle?: FrameStyle;
+  frameLabel?: string;
+  frameColor?: string;
+  frameTextColor?: string;
 }
 
 export interface WifiFormData {
@@ -112,6 +119,7 @@ export interface SocialFormData {
 
 export interface QrHistoryEntry {
   id: string;
+  version?: number;
   title: string;
   type: QrType;
   rawPayload: string;
@@ -119,6 +127,10 @@ export interface QrHistoryEntry {
   previewThumbnail?: string;
   customization: QrCustomization;
   formData: Record<string, unknown>;
+  templateId?: string;
+  templateName?: string;
+  summary?: string;
+  isSensitive?: boolean;
 }
 
 export interface PresetPalette {

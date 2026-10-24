@@ -11,17 +11,33 @@ export const Header: React.FC = () => {
   const navItems = [
     { label: 'Home', path: '/' },
     { label: 'QR Generator', path: '/generator' },
+    { label: 'Template Library', path: '/templates' },
+    { label: 'History', path: '/history' },
+    { label: 'Print Templates', path: '/generator?mode=print-templates' },
     { label: 'Tabletop Cards', path: '/generator?mode=promo-card' },
     { label: 'Design Services', path: '/#services' },
     { label: 'About', path: '/about' },
   ];
 
   const isActive = (path: string) => {
+    if (path === '/history') {
+      return location.pathname === '/history';
+    }
+    if (path === '/templates') {
+      return location.pathname === '/templates';
+    }
+    if (path.includes('?mode=print-templates')) {
+      return location.pathname === '/generator' && location.search.includes('mode=print-templates');
+    }
     if (path.includes('?mode=promo-card')) {
       return location.pathname === '/generator' && location.search.includes('mode=promo-card');
     }
     if (path === '/generator') {
-      return location.pathname === '/generator' && !location.search.includes('mode=promo-card');
+      return (
+        location.pathname === '/generator' &&
+        !location.search.includes('mode=promo-card') &&
+        !location.search.includes('mode=print-templates')
+      );
     }
     if (path === '/') return location.pathname === '/' && !location.hash;
     if (path.startsWith('/#')) return false;

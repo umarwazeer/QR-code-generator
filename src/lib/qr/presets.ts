@@ -20,6 +20,10 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   margin: 10,
   logoSize: 0.25,
   logoMargin: 6,
+  frameStyle: 'none',
+  frameLabel: 'SCAN ME',
+  frameColor: '#0f172a',
+  frameTextColor: '#ffffff',
 };
 
 export const COLOR_PRESETS: PresetPalette[] = [

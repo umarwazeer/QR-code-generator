@@ -131,6 +131,16 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/templates" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  QR Template Library
+                </Link>
+              </li>
+              <li>
+                <Link to="/history" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  QR History & Recents
+                </Link>
+              </li>
+              <li>
                 <Link to="/generator?mode=promo-card" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   Tabletop Promo Cards
                 </Link>

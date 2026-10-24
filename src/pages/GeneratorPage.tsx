@@ -8,9 +8,14 @@ import {
   QrCode,
   Layout,
   Layers,
+  Printer,
+  FileSpreadsheet,
+  LayoutTemplate,
 } from 'lucide-react';
 import { QrType, QrCustomization, QrHistoryEntry } from '../types/qr';
 import { DEFAULT_CUSTOMIZATION } from '../lib/qr/presets';
+import { getTemplateById } from '../data/qrTemplates';
+import { QrTemplate } from '../types/template';
 import {
   buildWifiPayload,
   buildVCardPayload,
@@ -28,9 +33,12 @@ import { FormFields } from '../components/generator/FormFields';
 import { CustomizationPanel } from '../components/generator/CustomizationPanel';
 import { QrPreview } from '../components/generator/QrPreview';
 import { HistoryModal } from '../components/generator/HistoryModal';
+import { getHistory } from '../lib/history/historyStorage';
+import { TemplateQuickDrawer } from '../components/templates/TemplateQuickDrawer';
 import { BusinessBrandingPanel } from '../components/branding/BusinessBrandingPanel';
 import { PromotionalCardPreview } from '../components/branding/PromotionalCardPreview';
 import { PremiumServicesModal } from '../components/branding/PremiumServicesModal';
+import { PrintTemplatesSection } from '../components/print/PrintTemplatesSection';
 import { BUSINESS_CATEGORIES } from '../lib/branding/categoryTemplates';
 import { BrandingConfig, BusinessCategory } from '../types/businessBranding';
 import { useToast } from '../components/ui/Toast';
@@ -39,9 +47,16 @@ export const GeneratorPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
 
-  // Mode: standard QR generator vs tabletop promotional card generator
-  const urlMode = searchParams.get('mode') === 'promo-card' ? 'promo-card' : 'standard';
-  const [activeMode, setActiveMode] = useState<'standard' | 'promo-card'>(urlMode);
+  // Mode: standard QR generator vs print templates vs tabletop promotional card
+  type GeneratorMode = 'standard' | 'print-templates' | 'promo-card';
+  const rawModeParam = searchParams.get('mode');
+  const urlMode: GeneratorMode =
+    rawModeParam === 'print-templates'
+      ? 'print-templates'
+      : rawModeParam === 'promo-card'
+      ? 'promo-card'
+      : 'standard';
+  const [activeMode, setActiveMode] = useState<GeneratorMode>(urlMode);
 
   // Content type & payload
   const initialType = (searchParams.get('type') as QrType) || 'url';
@@ -50,11 +65,15 @@ export const GeneratorPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<QrType>(initialType);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState<Record<string, any>>({
-    url: initialUrl || 'https://qrstudio.app',
+    url: initialUrl || 'https://qr-studio-umar.vercel.app',
   });
   const [customization, setCustomization] = useState<QrCustomization>(DEFAULT_CUSTOMIZATION);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [isTemplatesDrawerOpen, setIsTemplatesDrawerOpen] = useState(false);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | undefined>(
+    searchParams.get('template') || undefined
+  );
 
   // Business branding state
   const initialCategoryParam = (searchParams.get('category') as BusinessCategory) || 'restaurant';
@@ -70,29 +89,69 @@ export const GeneratorPage: React.FC = () => {
     callToAction: matchedCategory.defaultCallToAction,
     primaryColor: matchedCategory.defaultPrimaryColor,
     secondaryColor: matchedCategory.defaultSecondaryColor,
-    footerNote: 'Free Static QR Code • Created with QR Studio • qrstudio.app',
+    footerNote: 'Free Static QR Code • Created with QR Studio • qr-studio-umar.vercel.app',
   });
 
-  // Keep activeMode in sync with search param if user navigated with ?mode=promo-card
+  // Keep activeMode and template in sync with search param if user navigated with ?mode=... or ?template=...
   useEffect(() => {
     const modeParam = searchParams.get('mode');
-    if (modeParam === 'promo-card') {
+    if (modeParam === 'print-templates') {
+      setActiveMode('print-templates');
+    } else if (modeParam === 'promo-card') {
       setActiveMode('promo-card');
+    } else {
+      setActiveMode('standard');
     }
     const catParam = searchParams.get('category') as BusinessCategory;
     if (catParam && BUSINESS_CATEGORIES.some((c) => c.id === catParam)) {
       handleSelectCategory(catParam);
     }
+    const templateParam = searchParams.get('template');
+    if (templateParam) {
+      const tpl = getTemplateById(templateParam);
+      if (tpl) {
+        setCustomization(tpl.customization);
+        setActiveTemplateId(tpl.id);
+      }
+    }
+    const loadHistoryParam = searchParams.get('loadHistory');
+    if (loadHistoryParam) {
+      const historyList = getHistory();
+      const entry = historyList.find((h) => h.id === loadHistoryParam);
+      if (entry) {
+        handleLoadFromHistory(entry);
+        showToast(`Loaded "${entry.title}" into generator`, 'success');
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.delete('loadHistory');
+            return next;
+          },
+          { replace: true }
+        );
+      }
+    }
   }, [searchParams]);
 
-  const handleSelectMode = (mode: 'standard' | 'promo-card') => {
+  const handleSelectTemplate = (template: QrTemplate) => {
+    setCustomization(template.customization);
+    setActiveTemplateId(template.id);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('template', template.id);
+      return next;
+    });
+    showToast(`Applied ${template.name} styling`, 'info');
+  };
+
+  const handleSelectMode = (mode: GeneratorMode) => {
     setActiveMode(mode);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      if (mode === 'promo-card') {
-        next.set('mode', 'promo-card');
-      } else {
+      if (mode === 'standard') {
         next.delete('mode');
+      } else {
+        next.set('mode', mode);
       }
       return next;
     });
@@ -246,18 +305,30 @@ export const GeneratorPage: React.FC = () => {
 
   // Reset all including styling
   const handleResetAll = () => {
-    setFormData({ url: 'https://qrstudio.app' });
+    setFormData({ url: 'https://qr-studio-umar.vercel.app' });
     setCustomization(DEFAULT_CUSTOMIZATION);
     setSelectedType('url');
+    setActiveTemplateId(undefined);
+    setSearchParams(new URLSearchParams());
     showToast('Reset generator to default settings', 'info');
   };
 
-  // Load entry from history modal
+  // Load entry from history modal or /history page
   const handleLoadFromHistory = (entry: QrHistoryEntry) => {
     setSelectedType(entry.type);
     setFormData(entry.formData || {});
     if (entry.customization) {
       setCustomization(entry.customization);
+    }
+    if (entry.templateId) {
+      const tpl = getTemplateById(entry.templateId);
+      if (tpl) {
+        setActiveTemplateId(tpl.id);
+      } else {
+        setActiveTemplateId(undefined);
+      }
+    } else {
+      setActiveTemplateId(undefined);
     }
   };
 
@@ -360,6 +431,16 @@ export const GeneratorPage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setIsTemplatesDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/60 dark:to-purple-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:border-indigo-400 transition-all cursor-pointer shadow-2xs"
+            title="Browse ready-made templates"
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>Templates (28)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsHistoryModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
@@ -380,31 +461,44 @@ export const GeneratorPage: React.FC = () => {
       </div>
 
       {/* MODE SELECTOR (Segmented tabs) */}
-      <div className="p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl max-w-xl flex items-center border border-slate-200 dark:border-slate-800">
+      <div className="p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl max-w-2xl flex items-center border border-slate-200 dark:border-slate-800">
         <button
           type="button"
           onClick={() => handleSelectMode('standard')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeMode === 'standard'
               ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <QrCode className="w-4 h-4" />
-          <span>Standard QR Generator</span>
+          <span>Standard QR</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSelectMode('print-templates')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeMode === 'print-templates'
+              ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span>Print Templates</span>
         </button>
 
         <button
           type="button"
           onClick={() => handleSelectMode('promo-card')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeMode === 'promo-card'
               ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Layout className="w-4 h-4" />
-          <span>Business Promotional Card</span>
+          <span>Tabletop Cards</span>
         </button>
       </div>
 
@@ -434,6 +528,7 @@ export const GeneratorPage: React.FC = () => {
               <CustomizationPanel
                 customization={customization}
                 onChange={setCustomization}
+                onOpenTemplates={() => setIsTemplatesDrawerOpen(true)}
               />
 
               {/* Static QR Notice banner */}
@@ -456,13 +551,30 @@ export const GeneratorPage: React.FC = () => {
                 customization={customization}
                 titleHint={titleHint}
                 formData={formData}
+                onOpenPrintTemplates={() => handleSelectMode('print-templates')}
+                templateId={activeTemplateId}
+                templateName={activeTemplateId ? getTemplateById(activeTemplateId)?.name : undefined}
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* MODE 2: BUSINESS PROMOTIONAL CARD GENERATOR */}
+      {/* MODE 2: PRINT TEMPLATES (Business Cards, Flyers, Table Tent Cards) */}
+      {activeMode === 'print-templates' && (
+        <PrintTemplatesSection
+          qrPayload={rawPayload}
+          selectedType={selectedType}
+          formData={formData}
+          customization={customization}
+          onSelectType={handleSelectType}
+          onChangeFormData={setFormData}
+          onResetFormData={handleResetForm}
+          onLoadSampleData={handleLoadSample}
+        />
+      )}
+
+      {/* MODE 3: BUSINESS PROMOTIONAL CARD GENERATOR */}
       {activeMode === 'promo-card' && (
         <div className="space-y-6">
           {/* Workspace Grid */}
@@ -528,6 +640,14 @@ export const GeneratorPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Template Quick Drawer */}
+      <TemplateQuickDrawer
+        isOpen={isTemplatesDrawerOpen}
+        onClose={() => setIsTemplatesDrawerOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+        activeTemplateId={activeTemplateId}
+      />
 
       {/* History Modal */}
       <HistoryModal

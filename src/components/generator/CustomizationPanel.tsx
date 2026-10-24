@@ -7,6 +7,9 @@ import {
   ShieldAlert,
   Trash2,
   Upload,
+  Tag,
+  LayoutTemplate,
+  Sparkles,
 } from 'lucide-react';
 import {
   QrCustomization,
@@ -14,6 +17,7 @@ import {
   CornerSquareType,
   CornerDotType,
   ErrorCorrectionLevel,
+  FrameStyle,
 } from '../../types/qr';
 import { COLOR_PRESETS } from '../../lib/qr/presets';
 import { analyzeQrContrast } from '../../lib/qr/contrastCheck';
@@ -21,13 +25,17 @@ import { analyzeQrContrast } from '../../lib/qr/contrastCheck';
 interface CustomizationPanelProps {
   customization: QrCustomization;
   onChange: (updated: QrCustomization) => void;
+  onOpenTemplates?: () => void;
 }
 
 export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   customization,
   onChange,
+  onOpenTemplates,
 }) => {
-  const [activeTab, setActiveTab] = React.useState<'colors' | 'shape' | 'corners' | 'logo' | 'specs'>('colors');
+  const [activeTab, setActiveTab] = React.useState<
+    'colors' | 'shape' | 'corners' | 'frames' | 'logo' | 'specs'
+  >('colors');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = <K extends keyof QrCustomization>(key: K, value: QrCustomization[K]) => {
@@ -153,6 +161,18 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
         </button>
         <button
           type="button"
+          onClick={() => setActiveTab('frames')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'frames'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Tag className="w-3.5 h-3.5" />
+          <span>Frames & CTA</span>
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab('logo')}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all cursor-pointer ${
             activeTab === 'logo'
@@ -180,11 +200,50 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
       {/* TAB 1: COLORS */}
       {activeTab === 'colors' && (
         <div className="space-y-5">
+          {/* Quick Template Library Banner */}
+          {onOpenTemplates && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-200/70 dark:border-indigo-800/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <LayoutTemplate className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>QR Template Library</span>
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white">28 Designs</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Explore curated layouts across 10 industries
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenTemplates}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Browse</span>
+              </button>
+            </div>
+          )}
+
           {/* Presets */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Curated Designer Palettes
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Curated Designer Palettes
+              </label>
+              {onOpenTemplates && (
+                <button
+                  type="button"
+                  onClick={onOpenTemplates}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium cursor-pointer"
+                >
+                  View All Templates →
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {COLOR_PRESETS.map((preset) => (
                 <button
@@ -487,6 +546,125 @@ export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TAB: FRAMES & CTA */}
+      {activeTab === 'frames' && (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Frame & Call-to-Action Style
+            </label>
+            <p className="text-xs text-slate-500 mb-3">
+              Wrap your QR code in a branded banner or pill to boost scan conversion rates.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {(
+                [
+                  { id: 'none', label: 'No Frame', desc: 'Raw QR code only' },
+                  { id: 'scan-me', label: 'Scan-Me Pill', desc: 'Centered pill badge at bottom' },
+                  { id: 'bottom-bar', label: 'Bottom Banner', desc: 'Full-width banner bar' },
+                  { id: 'top-badge', label: 'Top Header', desc: 'Title header badge' },
+                  { id: 'card-border', label: 'Card Border', desc: 'Framed outline card' },
+                ] as { id: FrameStyle; label: string; desc: string }[]
+              ).map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => update('frameStyle', style.id)}
+                  className={`p-3 text-left rounded-xl border text-xs transition-all cursor-pointer ${
+                    (customization.frameStyle || 'none') === style.id
+                      ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                  }`}
+                >
+                  <span className="font-semibold block">{style.label}</span>
+                  <span className="text-[10px] text-slate-500 block mt-0.5">{style.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {customization.frameStyle && customization.frameStyle !== 'none' && (
+            <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+              {/* Call-to-action text presets */}
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Frame Label / Call-to-Action Text
+                </label>
+                <input
+                  type="text"
+                  maxLength={30}
+                  value={customization.frameLabel || ''}
+                  onChange={(e) => update('frameLabel', e.target.value)}
+                  placeholder="e.g. SCAN ME, VIEW MENU"
+                  className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white mb-2"
+                />
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'SCAN ME',
+                    'SCAN TO VIEW MENU',
+                    'CONNECT TO WI-FI',
+                    'VISIT OUR WEBSITE',
+                    'FOLLOW US',
+                  ].map((presetLabel) => (
+                    <button
+                      key={presetLabel}
+                      type="button"
+                      onClick={() => update('frameLabel', presetLabel)}
+                      className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      {presetLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Frame Colors */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Frame Background Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={customization.frameColor || customization.foregroundColor || '#0f172a'}
+                      onChange={(e) => update('frameColor', e.target.value)}
+                      className="w-9 h-9 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={customization.frameColor || customization.foregroundColor || '#0f172a'}
+                      onChange={(e) => update('frameColor', e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs font-mono uppercase rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Frame Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={customization.frameTextColor || '#ffffff'}
+                      onChange={(e) => update('frameTextColor', e.target.value)}
+                      className="w-9 h-9 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={customization.frameTextColor || '#ffffff'}
+                      onChange={(e) => update('frameTextColor', e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs font-mono uppercase rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

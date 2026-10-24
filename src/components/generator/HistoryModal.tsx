@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   X,
   History,
@@ -8,6 +9,7 @@ import {
   RotateCcw,
   Shield,
   Clock,
+  ExternalLink,
 } from 'lucide-react';
 import {
   getHistory,
@@ -111,13 +113,23 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
             <History className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             <span>Recent QR History</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/history"
+              onClick={onClose}
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-medium mr-1"
+            >
+              <span>Full Page</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Privacy setting banner */}
@@ -188,6 +200,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                       <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
                         {entry.type}
                       </span>
+                      {entry.templateName && (
+                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold truncate max-w-[120px]">
+                          {entry.templateName}
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -198,7 +215,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                     </span>
                     <span>·</span>
                     <span className="font-mono truncate max-w-[200px]">
-                      {entry.rawPayload}
+                      {entry.summary || entry.rawPayload}
                     </span>
                   </div>
                 </div>

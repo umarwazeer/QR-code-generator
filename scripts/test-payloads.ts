@@ -177,4 +177,137 @@ assert(
   'Filename sanitization cleans special characters and spaces'
 );
 
-console.log('\n🎉 ALL 12 TEST SUITES PASSED CLEANLY!');
+// 13. QR Template Library Verification
+import { QR_TEMPLATES, getTemplateById, getTemplatesByCategory } from '../src/data/qrTemplates';
+import { TEMPLATE_CATEGORIES } from '../src/types/template';
+
+assert(QR_TEMPLATES.length >= 24, `Template library contains >= 24 templates (found ${QR_TEMPLATES.length})`);
+
+const templateIds = new Set<string>();
+for (const tpl of QR_TEMPLATES) {
+  assert(!templateIds.has(tpl.id), `Template ID '${tpl.id}' is globally unique`);
+  templateIds.add(tpl.id);
+  assert(tpl.name.trim().length > 0, `Template ${tpl.id} has valid name`);
+  assert(tpl.description.trim().length > 0, `Template ${tpl.id} has description`);
+  assert(!!tpl.customization.foregroundColor, `Template ${tpl.id} has foregroundColor`);
+  assert(!!tpl.customization.dotType, `Template ${tpl.id} has valid dotType`);
+  assert(!!tpl.customization.cornerSquareType, `Template ${tpl.id} has cornerSquareType`);
+  assert(!!tpl.customization.cornerDotType, `Template ${tpl.id} has cornerDotType`);
+}
+assert(templateIds.size === QR_TEMPLATES.length, 'All template IDs are unique');
+
+// Test category filtering
+for (const cat of TEMPLATE_CATEGORIES) {
+  if (cat.id === 'all') continue;
+  const filtered = getTemplatesByCategory(cat.id);
+  assert(filtered.length > 0, `Category '${cat.id}' has at least one template (found ${filtered.length})`);
+}
+
+// Test ID lookup
+const classicTpl = getTemplateById('classic-noir');
+assert(classicTpl !== undefined && classicTpl.name.includes('Classic'), 'getTemplateById finds classic-noir');
+
+// 14. QR History Storage & Privacy Safeguards Verification
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>();
+  globalThis.localStorage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => store.set(key, String(value)),
+    removeItem: (key: string) => store.delete(key),
+    clear: () => store.clear(),
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    get length() {
+      return store.size;
+    },
+  } as Storage;
+}
+
+import {
+  saveHistoryEntry,
+  getHistory,
+  deleteHistoryEntry,
+  clearAllHistory,
+  getHistorySettings,
+  updateHistorySettings,
+  generatePayloadSummary,
+  exportHistoryJson,
+  getHistoryStats,
+} from '../src/lib/history/historyStorage';
+import { DEFAULT_CUSTOMIZATION } from '../src/lib/qr/presets';
+
+// Clear previous history
+clearAllHistory();
+updateHistorySettings({ enabled: true, maxItems: 50 });
+
+// Test summary generator
+const urlSummary = generatePayloadSummary('url', { url: 'https://example.com/menu' }, 'https://example.com/menu');
+assert(urlSummary.includes('example.com'), 'URL summary extracts domain correctly');
+
+const wifiSummary = generatePayloadSummary('wifi', { ssid: 'GuestCafe', security: 'WPA' }, 'WIFI:S:GuestCafe;');
+assert(wifiSummary.includes('GuestCafe'), 'Wi-Fi summary includes network SSID');
+assert(wifiSummary.includes('Password protected'), 'Wi-Fi summary notes password protection');
+
+// Test saving standard entry
+const savedUrl = saveHistoryEntry({
+  title: 'My Website',
+  type: 'url',
+  rawPayload: 'https://qr-studio-umar.vercel.app',
+  customization: DEFAULT_CUSTOMIZATION,
+  formData: { url: 'https://qr-studio-umar.vercel.app' },
+  templateId: 'corporate-blue',
+  templateName: 'Executive Corporate Blue',
+});
+assert(savedUrl.success === true, 'Standard URL QR successfully saved');
+assert(savedUrl.entry?.version === 2, 'History record has schema version 2');
+assert(savedUrl.entry?.templateId === 'corporate-blue', 'History record stores templateId');
+
+// Test Wi-Fi password masking
+const savedWifi = saveHistoryEntry({
+  title: 'Office Wi-Fi',
+  type: 'wifi',
+  rawPayload: 'WIFI:S:OfficeNet;T:WPA;P:SuperSecret123;;',
+  customization: DEFAULT_CUSTOMIZATION,
+  formData: { ssid: 'OfficeNet', password: 'SuperSecret123', security: 'WPA' },
+});
+assert(savedWifi.success === true, 'Wi-Fi QR successfully saved');
+assert(savedWifi.entry?.formData.password === '••••••••', 'Wi-Fi password in formData is securely masked');
+assert(savedWifi.entry?.isSensitive === true, 'Wi-Fi QR is tagged as isSensitive');
+
+// Test retrieval
+const currentHistory = getHistory();
+assert(currentHistory.length === 2, 'History retrieval returns 2 saved records');
+
+// Test single record deletion
+const idToDelete = savedUrl.entry!.id;
+const deleteRes = deleteHistoryEntry(idToDelete);
+assert(deleteRes === true, 'deleteHistoryEntry returns true');
+assert(getHistory().length === 1, 'History length decreased to 1 after deletion');
+
+// Test export JSON
+const backupJson = exportHistoryJson();
+assert(backupJson.includes('QR Studio'), 'Export backup JSON contains QR Studio header');
+assert(backupJson.includes('Office Wi-Fi'), 'Export backup JSON contains saved entries');
+
+// Test stats calculation
+const stats = getHistoryStats();
+assert(stats.count === 1, 'Stats reports correct count');
+assert(stats.sensitiveCount === 1, 'Stats reports correct sensitive Wi-Fi count');
+
+// Test retention limit enforcement
+for (let i = 0; i < 55; i++) {
+  saveHistoryEntry({
+    title: `Bulk QR #${i}`,
+    type: 'text',
+    rawPayload: `Text payload #${i}_${Math.random()}`,
+    customization: DEFAULT_CUSTOMIZATION,
+    formData: { text: `Bulk text ${i}` },
+  });
+}
+const prunedHistory = getHistory();
+assert(prunedHistory.length <= 50, `Retention limit enforced: expected <= 50 items, found ${prunedHistory.length}`);
+
+// Test clear all
+clearAllHistory();
+assert(getHistory().length === 0, 'clearAllHistory successfully wipes records');
+
+console.log('\n🎉 ALL 14 TEST SUITES PASSED CLEANLY!');

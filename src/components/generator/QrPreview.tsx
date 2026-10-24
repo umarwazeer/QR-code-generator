@@ -23,6 +23,9 @@ interface QrPreviewProps {
   customization: QrCustomization;
   titleHint?: string;
   formData: Record<string, unknown>;
+  onOpenPrintTemplates?: () => void;
+  templateId?: string;
+  templateName?: string;
 }
 
 export const QrPreview: React.FC<QrPreviewProps> = ({
@@ -31,6 +34,9 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
   customization,
   titleHint,
   formData,
+  onOpenPrintTemplates,
+  templateId,
+  templateName,
 }) => {
   const { showToast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,6 +94,8 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
           rawPayload: payload,
           customization,
           formData,
+          templateId,
+          templateName,
         });
       }
     } catch (err) {
@@ -116,6 +124,8 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
           rawPayload: payload,
           customization,
           formData,
+          templateId,
+          templateName,
         });
       }
     } catch (err) {
@@ -145,6 +155,8 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
           rawPayload: payload,
           customization,
           formData,
+          templateId,
+          templateName,
         });
       }
     } catch (err) {
@@ -175,14 +187,21 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
       showToast('Enter content to save', 'error');
       return;
     }
-    saveHistoryEntry({
+    const result = saveHistoryEntry({
       title: displayTitle,
       type,
       rawPayload: payload,
       customization,
       formData,
+      templateId,
+      templateName,
+      isExplicit: true,
     });
-    showToast('Saved to local history', 'success');
+    if (result.success) {
+      showToast('Saved to local history', 'success');
+    } else {
+      showToast(result.error || 'Failed to save to history', 'error');
+    }
   };
 
   // Print
@@ -244,14 +263,73 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
           </div>
         )}
 
+        {/* Framed or Standard Wrapper */}
         <div
-          ref={containerRef}
-          className="flex items-center justify-center max-w-full overflow-hidden transition-all duration-200"
+          className={`flex flex-col items-center justify-center transition-all ${
+            customization.frameStyle && customization.frameStyle !== 'none'
+              ? 'p-4 rounded-2xl shadow-sm border'
+              : ''
+          }`}
           style={{
-            maxWidth: '300px',
-            maxHeight: '300px',
+            backgroundColor:
+              customization.frameStyle && customization.frameStyle !== 'none' && !customization.transparentBackground
+                ? customization.backgroundColor || '#ffffff'
+                : undefined,
+            borderColor:
+              customization.frameStyle === 'card-border'
+                ? customization.frameColor || customization.foregroundColor || '#0f172a'
+                : 'transparent',
+            borderWidth: customization.frameStyle === 'card-border' ? '3px' : '0px',
           }}
-        />
+        >
+          {/* Top Badge */}
+          {customization.frameStyle === 'top-badge' && customization.frameLabel && (
+            <div
+              className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider mb-3 shadow-xs"
+              style={{
+                backgroundColor: customization.frameColor || customization.foregroundColor || '#0f172a',
+                color: customization.frameTextColor || '#ffffff',
+              }}
+            >
+              {customization.frameLabel}
+            </div>
+          )}
+
+          <div
+            ref={containerRef}
+            className="flex items-center justify-center max-w-full overflow-hidden transition-all duration-200"
+            style={{
+              maxWidth: '300px',
+              maxHeight: '300px',
+            }}
+          />
+
+          {/* Bottom Bar or Scan-Me Pill */}
+          {customization.frameStyle === 'scan-me' && customization.frameLabel && (
+            <div
+              className="mt-3.5 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-xs flex items-center gap-1.5"
+              style={{
+                backgroundColor: customization.frameColor || customization.foregroundColor || '#0f172a',
+                color: customization.frameTextColor || '#ffffff',
+              }}
+            >
+              <span>{customization.frameLabel}</span>
+            </div>
+          )}
+
+          {(customization.frameStyle === 'bottom-bar' || customization.frameStyle === 'card-border') &&
+            customization.frameLabel && (
+              <div
+                className="mt-3 w-full py-1.5 px-3 rounded-lg text-center text-xs font-bold uppercase tracking-wider shadow-xs"
+                style={{
+                  backgroundColor: customization.frameColor || customization.foregroundColor || '#0f172a',
+                  color: customization.frameTextColor || '#ffffff',
+                }}
+              >
+                {customization.frameLabel}
+              </div>
+            )}
+        </div>
 
         {/* Scan Status Indicator */}
         <div className="mt-4 flex items-center justify-center gap-2 text-xs">
@@ -329,6 +407,28 @@ export const QrPreview: React.FC<QrPreviewProps> = ({
             <span>Print PDF</span>
           </button>
         </div>
+
+        {/* Quick link to Print Templates section */}
+        {onOpenPrintTemplates && (
+          <button
+            type="button"
+            onClick={onOpenPrintTemplates}
+            className="w-full flex items-center justify-between p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100/60 dark:hover:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 transition-colors cursor-pointer text-left text-xs"
+          >
+            <div className="flex items-center gap-2">
+              <Printer className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <div>
+                <span className="font-semibold block">Print Templates</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Export as Business Card, A4 Flyer, or Tent Card
+                </span>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+              Open &rarr;
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Practical Scan-Testing Instructions Guide */}
